@@ -13,6 +13,7 @@ def find_library():
     """Locate the compiled Fortran library"""
     # Look in package directory
     package_dir = os.path.dirname(__file__)
+    package_dir = os.path.abspath(package_dir)
 
     # Try different library extensions
     lib_names = [
@@ -24,23 +25,35 @@ def find_library():
         'rf_gpu_core.dll',
     ]
 
-    for lib_name in lib_names:
-        lib_path = os.path.join(package_dir, lib_name)
-        if os.path.exists(lib_path):
-            return lib_path
-
-    # Also check in build directory for development
-    build_paths = [
-        os.path.join(package_dir, '../../build'),
-        os.path.join(package_dir, '../../builddir'),
+    # Search paths in priority order
+    search_paths = [
+        package_dir,  # Installed location
+        os.path.join(package_dir, '..', '..', 'build', 'cp312'),  # Meson build (Python 3.12)
+        os.path.join(package_dir, '..', '..', 'build', 'cp311'),  # Meson build (Python 3.11)
+        os.path.join(package_dir, '..', '..', 'build', 'cp310'),  # Meson build (Python 3.10)
+        os.path.join(package_dir, '..', '..', 'build', 'cp39'),   # Meson build (Python 3.9)
+        os.path.join(package_dir, '..', '..', 'builddir'),        # Alternative build dir
     ]
 
-    for build_path in build_paths:
-        if os.path.exists(build_path):
-            for lib_name in lib_names:
-                lib_path = os.path.join(build_path, lib_name)
-                if os.path.exists(lib_path):
-                    return lib_path
+    for search_path in search_paths:
+        search_path = os.path.abspath(search_path)
+        if not os.path.exists(search_path):
+            continue
+
+        for lib_name in lib_names:
+            lib_path = os.path.join(search_path, lib_name)
+            if os.path.exists(lib_path):
+                return lib_path
+
+        # Also search recursively in build directories
+        if 'build' in search_path:
+            try:
+                for root, dirs, files in os.walk(search_path):
+                    for lib_name in lib_names:
+                        if lib_name in files:
+                            return os.path.join(root, lib_name)
+            except Exception:
+                pass
 
     return None
 
