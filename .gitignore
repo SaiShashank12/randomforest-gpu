@@ -49,4 +49,4 @@ ENV/
 *.ipynb
 
 # Build artifacts
-wheelhouse/
+# wheelhouse/  # Commented out - we want to commit wheels to repo
