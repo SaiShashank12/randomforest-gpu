@@ -38,7 +38,7 @@ contains
         ! Compute initial Gini criterion
         pno = 0.0d0
         pdo = 0.0d0
-        !$ACC PARALLEL LOOP REDUCTION(+:pno,pdo) IF_PRESENT
+        !$ACC PARALLEL LOOP REDUCTION(+:pno,pdo)
         do j = 1, nclass
             pno = pno + classpop(j) * classpop(j)
             pdo = pdo + classpop(j)
@@ -80,8 +80,8 @@ contains
 
             ! This is the critical loop for GPU acceleration
             ! Evaluate each potential split point
-            !$ACC DATA COPYIN(x, classes, y) COPY(wl, wr) IF_PRESENT
-            !$ACC PARALLEL LOOP PRIVATE(nc, k, crit) REDUCTION(max:critmax) IF_PRESENT
+            !$ACC DATA COPYIN(x, classes, y) COPY(wl, wr)
+            !$ACC PARALLEL LOOP PRIVATE(nc, k, crit) REDUCTION(max:critmax)
             do nsp = ndstart, ndend - 1
                 nc = nsp
                 k = classes(nc)
@@ -132,8 +132,8 @@ contains
         nleft = 0
 
         ! Data partitioning (GPU-accelerated when compiled with OpenACC)
-        !$ACC DATA COPYIN(x, splitval) COPYOUT(indices_left, nleft) IF_PRESENT
-        !$ACC PARALLEL LOOP REDUCTION(+:nleft) IF_PRESENT
+        !$ACC DATA COPYIN(x, splitval) COPYOUT(indices_left, nleft)
+        !$ACC PARALLEL LOOP REDUCTION(+:nleft)
         do i = ndstart, ndend
             if (x(i, msplit) <= splitval) then
                 nleft = nleft + 1
@@ -172,7 +172,7 @@ contains
 
         ! Compute class populations
         classpop(:) = 0.0d0
-        !$ACC PARALLEL LOOP IF_PRESENT
+        !$ACC PARALLEL LOOP
         do i = 1, n
             classpop(classes(i)) = classpop(classes(i)) + 1.0d0
         end do
