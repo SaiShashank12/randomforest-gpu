@@ -34,7 +34,7 @@ message('Fortran compiler ID: ' + fc.get_id())
 message('Fortran compiler version: ' + fc.version())
 
 # Try to detect GPU compiler capabilities
-if fc.get_id() == 'nvfortran' or fc.get_id() == 'pgi'
+if fc.get_id() == 'nvidia_hpc' or fc.get_id() == 'nvfortran' or fc.get_id() == 'pgi'
     # NVIDIA HPC SDK compiler - Enable OpenACC for GPU acceleration
     message('Detected NVIDIA compiler - Enabling OpenACC GPU support')
     fortran_args += ['-acc', '-gpu=managed', '-Minfo=accel']
