@@ -52,14 +52,18 @@ jobs:
           path: dist/*.whl
           retention-days: 30
 
-  # Optional: Create a release with all wheels
+  # Create a release with all wheels
   create-release:
     name: Create Release with Wheels
     needs: build_wheels
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download all wheels
         uses: actions/download-artifact@v4
         with:
@@ -70,9 +74,42 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R wheelhouse
 
-      - name: Upload all wheels as single artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-wheels
-          path: wheelhouse/*.whl
-          retention-days: 90
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(grep "version = " pyproject.toml | head -1 | cut -d'"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create/Update Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG="v${VERSION}"
+
+          # Delete existing release if it exists
+          gh release delete "$TAG" -y 2>/dev/null || true
+
+          # Create new release
+          gh release create "$TAG" \
+            --title "Random Forest GPU v${VERSION}" \
+            --notes "CPU wheels built with gfortran for Linux, macOS, and Windows.
+
+          **Installation:**
+          Download the appropriate wheel for your platform and Python version, then:
+          \`\`\`bash
+          pip install randomforest_gpu-${VERSION}-cpXXX-cpXXX-PLATFORM.whl
+          \`\`\`
+
+          Or install directly from URL:
+          \`\`\`bash
+          pip install https://github.com/SaiShashank12/randomforest-gpu/releases/download/${TAG}/randomforest_gpu-${VERSION}-cp312-cp312-linux_x86_64.whl
+          \`\`\`
+
+          **GPU Support:**
+          These are CPU-only wheels. For GPU support, compile from source with nvfortran:
+          \`\`\`bash
+          FC=nvfortran pip install git+https://github.com/SaiShashank12/randomforest-gpu.git
+          \`\`\`" \
+            wheelhouse/*.whl
