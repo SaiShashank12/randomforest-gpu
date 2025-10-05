@@ -55,15 +55,10 @@ jobs:
         run: |
           python -m build --wheel
 
-      - name: Rename wheel to indicate GPU support
+      - name: List built wheels
         run: |
-          cd dist
-          for wheel in *.whl; do
-            # Add 'cuda' tag to wheel name
-            new_name=$(echo $wheel | sed 's/linux_x86_64/cuda123+linux_x86_64/')
-            mv "$wheel" "$new_name"
-            echo "Renamed to: $new_name"
-          done
+          ls -lh dist/*.whl
+          echo "GPU wheel built with nvfortran + OpenACC"
 
       - name: Upload GPU wheels
         uses: actions/upload-artifact@v4
@@ -99,6 +94,16 @@ jobs:
           VERSION=$(grep "version = " pyproject.toml | head -1 | cut -d'"' -f2)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
+
+      - name: Rename wheels with GPU suffix for release
+        run: |
+          cd gpu-wheelhouse
+          for wheel in *.whl; do
+            # Insert -gpu before version number
+            new_name=$(echo $wheel | sed 's/-\([0-9]\)/-gpu-\1/')
+            mv "$wheel" "$new_name"
+            echo "Renamed: $wheel -> $new_name"
+          done
 
       - name: Upload GPU wheels to existing release
         env:
