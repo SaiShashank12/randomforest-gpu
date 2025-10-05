@@ -161,7 +161,7 @@ contains
         integer, intent(out) :: n_nodes
         real(8), intent(out) :: tree_nodes(1000, 5)  ! Simplified tree storage
 
-        integer :: current_depth, msplit, jstat
+        integer :: current_depth, msplit, jstat, i
         real(8) :: bestsplit, decsplit
         real(8) :: classpop(nclass)
         integer :: mtry
