@@ -1,6 +1,8 @@
 name: Build GPU Wheels (NVFORTRAN)
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
   release:
     types: [published]
@@ -76,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
