@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include meson.build
+
+recursive-include src *.f90 *.f *.c *.h
+recursive-include src/randomforest_gpu *.py
+recursive-include tests *.py
+
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store

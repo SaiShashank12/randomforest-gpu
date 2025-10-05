@@ -1,0 +1,70 @@
+[build-system]
+requires = ["meson-python>=0.13.0", "meson>=1.0.0", "numpy>=2.0.0"]
+build-backend = "mesonpy"
+
+[project]
+name = "randomforest-gpu"
+version = "0.1.0"
+description = "GPU-accelerated Random Forest with Fortran backend using OpenACC"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "GPL-2.0-or-later"}
+authors = [
+    {name = "Random Forest GPU Team"}
+]
+keywords = ["machine-learning", "random-forest", "gpu", "cuda", "openacc", "fortran"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Fortran",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.21.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "scikit-learn>=1.0",
+]
+gpu = [
+    "cupy-cuda11x; platform_system=='Linux'",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/randomforest-gpu"
+Documentation = "https://github.com/yourusername/randomforest-gpu"
+Repository = "https://github.com/yourusername/randomforest-gpu"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.cibuildwheel]
+build-verbosity = 1
+skip = ["pp*", "cp36-*", "cp37-*", "cp38-*"]
+test-command = "pytest {project}/tests"
+test-requires = ["pytest", "numpy", "scikit-learn"]
+
+[tool.cibuildwheel.linux]
+before-build = "yum install -y gcc-gfortran || apt-get install -y gfortran"
+archs = ["x86_64"]
+
+[tool.cibuildwheel.macos]
+before-all = [
+    "bash {project}/tools/wheels/cibw_before_build_macos.sh {project}"
+]
+environment = { FC="gfortran-13", CC="clang", CXX="clang++" }
+
+[tool.cibuildwheel.windows]
+before-build = "pip install delvewheel"
