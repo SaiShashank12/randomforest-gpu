@@ -105,12 +105,30 @@ jobs:
             echo "Renamed: $wheel -> $new_name"
           done
 
-      - name: Upload GPU wheels to existing release
+      - name: Upload GPU wheels to release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           TAG="v${VERSION}"
 
-          # Upload GPU wheels to the existing release
-          gh release upload "$TAG" gpu-wheelhouse/*.whl --clobber
+          # Create release if it doesn't exist, otherwise upload to existing
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Creating release $TAG"
+            gh release create "$TAG" \
+              --title "Random Forest GPU v${VERSION}" \
+              --notes "GPU-accelerated Random Forest with OpenACC support.
+
+          **GPU Wheels:**
+          Built with NVIDIA HPC SDK nvfortran compiler for GPU acceleration.
+          Requires NVIDIA GPU with CUDA 12.3+.
+
+          **Installation:**
+          \`\`\`bash
+          pip install https://github.com/SaiShashank12/randomforest-gpu/releases/download/${TAG}/randomforest_gpu-gpu-${VERSION}-cp312-cp312-linux_x86_64.whl
+          \`\`\`" \
+              gpu-wheelhouse/*.whl
+          else
+            echo "Uploading to existing release $TAG"
+            gh release upload "$TAG" gpu-wheelhouse/*.whl --clobber
+          fi
