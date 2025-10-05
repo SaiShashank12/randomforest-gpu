@@ -1,9 +1,10 @@
 name: Build wheels
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
+  # Disabled automatic builds - build wheels manually or on release
+  # push:
+  #   branches: [main, develop]
+  # pull_request:
   release:
     types: [published]
   workflow_dispatch:
@@ -107,3 +108,6 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
+          # Uncomment to test with TestPyPI first:
+          # repository-url: https://test.pypi.org/legacy/
+          # password: ${{ secrets.TEST_PYPI_API_TOKEN }}
