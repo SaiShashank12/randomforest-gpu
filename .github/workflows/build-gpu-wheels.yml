@@ -1,0 +1,95 @@
+name: Build GPU Wheels (NVFORTRAN)
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build_gpu_wheels:
+    name: Build GPU wheel for Python ${{ matrix.python-version }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install NVIDIA HPC SDK
+        run: |
+          curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
+          echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
+          sudo apt-get update -y
+          sudo apt-get install -y nvhpc-23-11
+
+      - name: Setup NVHPC environment
+        run: |
+          echo "NVARCH=`uname -s`_`uname -m`" >> $GITHUB_ENV
+          echo "NVCOMPILERS=/opt/nvidia/hpc_sdk" >> $GITHUB_ENV
+          echo "/opt/nvidia/hpc_sdk/Linux_x86_64/23.11/compilers/bin" >> $GITHUB_PATH
+          echo "PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/23.11/compilers/bin:$PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/23.11/compilers/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+      - name: Verify nvfortran
+        run: |
+          which nvfortran
+          nvfortran --version
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build wheel meson-python meson ninja numpy
+
+      - name: Build GPU wheel
+        env:
+          FC: nvfortran
+        run: |
+          python -m build --wheel
+
+      - name: Rename wheel to indicate GPU support
+        run: |
+          cd dist
+          for wheel in *.whl; do
+            # Add 'cuda' tag to wheel name
+            new_name=$(echo $wheel | sed 's/linux_x86_64/cuda123+linux_x86_64/')
+            mv "$wheel" "$new_name"
+            echo "Renamed to: $new_name"
+          done
+
+      - name: Upload GPU wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpu-wheel-py${{ matrix.python-version }}
+          path: dist/*.whl
+          retention-days: 90
+
+  collect_gpu_wheels:
+    name: Collect all GPU wheels
+    needs: build_gpu_wheels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Download all GPU wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: gpu-wheel-*
+          merge-multiple: true
+          path: gpu-wheelhouse
+
+      - name: Display structure
+        run: ls -lh gpu-wheelhouse
+
+      - name: Upload all GPU wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-gpu-wheels
+          path: gpu-wheelhouse/*.whl
+          retention-days: 90
