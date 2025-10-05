@@ -132,25 +132,13 @@ contains
 
     ! GPU availability check
     function check_gpu_available_c() bind(C, name="check_gpu_available") result(available)
-#ifdef _OPENACC
-        use openacc
-#endif
         implicit none
         integer(c_int) :: available
-#ifdef _OPENACC
-        integer :: num_devices
-#endif
 
-        ! Default: no GPU
+        ! Always return 0 for now
+        ! GPU detection requires OpenACC runtime which has linking issues
+        ! When compiled with -acc, OpenACC kernels will still run on GPU
         available = 0
-
-#ifdef _OPENACC
-        ! OpenACC is enabled - check for GPU devices
-        num_devices = acc_get_num_devices(acc_device_nvidia)
-        if (num_devices > 0) then
-            available = 1
-        end if
-#endif
 
     end function check_gpu_available_c
 
