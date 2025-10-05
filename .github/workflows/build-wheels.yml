@@ -24,21 +24,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Setup Fortran compiler
-      - name: Setup Fortran (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gfortran
-
-      - name: Setup Fortran (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install gcc
-
-      - name: Setup Fortran (Windows)
-        if: runner.os == 'Windows'
-        uses: awvwgk/setup-fortran@v1
+      # Setup Fortran compiler - use setup-fortran for all platforms
+      - name: Setup Fortran
+        uses: fortran-lang/setup-fortran@v1
         with:
           compiler: gcc
           version: 13
@@ -47,6 +35,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install build wheel meson-python meson ninja numpy
+
+      - name: Verify Fortran compiler
+        run: |
+          which gfortran || echo "gfortran not in PATH"
+          gfortran --version || echo "gfortran not working"
 
       - name: Build wheel
         run: |
