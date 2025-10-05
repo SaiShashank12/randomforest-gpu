@@ -95,40 +95,35 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
-      - name: Rename wheels with GPU suffix for release
-        run: |
-          cd gpu-wheelhouse
-          for wheel in *.whl; do
-            # Insert -gpu before version number
-            new_name=$(echo $wheel | sed 's/-\([0-9]\)/-gpu-\1/')
-            mv "$wheel" "$new_name"
-            echo "Renamed: $wheel -> $new_name"
-          done
-
-      - name: Upload GPU wheels to release
+      - name: Upload GPU wheels to GPU release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
-          TAG="v${VERSION}"
+          TAG="v${VERSION}-gpu"
 
-          # Create release if it doesn't exist, otherwise upload to existing
-          if ! gh release view "$TAG" > /dev/null 2>&1; then
-            echo "Creating release $TAG"
-            gh release create "$TAG" \
-              --title "Random Forest GPU v${VERSION}" \
-              --notes "GPU-accelerated Random Forest with OpenACC support.
+          # Delete old GPU release if exists
+          gh release delete "$TAG" -y 2>/dev/null || true
 
-          **GPU Wheels:**
-          Built with NVIDIA HPC SDK nvfortran compiler for GPU acceleration.
-          Requires NVIDIA GPU with CUDA 12.3+.
+          # Create GPU-specific release
+          gh release create "$TAG" \
+            --title "Random Forest GPU v${VERSION} (GPU Build)" \
+            --notes "**GPU-Accelerated Wheels**
+
+          Built with NVIDIA HPC SDK nvfortran + OpenACC for GPU acceleration.
+
+          **Requirements:**
+          - NVIDIA GPU with CUDA 12.3+
+          - Linux x86_64
 
           **Installation:**
           \`\`\`bash
-          pip install https://github.com/SaiShashank12/randomforest-gpu/releases/download/${TAG}/randomforest_gpu-gpu-${VERSION}-cp312-cp312-linux_x86_64.whl
-          \`\`\`" \
-              gpu-wheelhouse/*.whl
-          else
-            echo "Uploading to existing release $TAG"
-            gh release upload "$TAG" gpu-wheelhouse/*.whl --clobber
-          fi
+          # Python 3.12
+          pip install https://github.com/SaiShashank12/randomforest-gpu/releases/download/${TAG}/randomforest_gpu-${VERSION}-cp312-cp312-linux_x86_64.whl
+
+          # Python 3.11
+          pip install https://github.com/SaiShashank12/randomforest-gpu/releases/download/${TAG}/randomforest_gpu-${VERSION}-cp311-cp311-linux_x86_64.whl
+          \`\`\`
+
+          **For CPU-only wheels, see the main release:** https://github.com/SaiShashank12/randomforest-gpu/releases/tag/v${VERSION}" \
+            gpu-wheelhouse/*.whl
