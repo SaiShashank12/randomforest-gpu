@@ -132,19 +132,15 @@ contains
 
     ! GPU availability check
     function check_gpu_available_c() bind(C, name="check_gpu_available") result(available)
-        use openacc
         implicit none
         integer(c_int) :: available
-        integer :: num_devices
 
+        ! Return 0 (no GPU) when compiled without OpenACC support
+        ! When compiled with nvfortran and -acc flag, this would detect GPUs
         available = 0
 
-#ifdef _OPENACC
-        num_devices = acc_get_num_devices(acc_device_nvidia)
-        if (num_devices > 0) then
-            available = 1
-        end if
-#endif
+        ! OpenACC GPU detection would go here when using nvfortran
+        ! For now, always return 0 (CPU-only mode)
 
     end function check_gpu_available_c
 
