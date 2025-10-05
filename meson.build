@@ -53,11 +53,12 @@ fortran_sources = files(
     'src/fortran/rf_core.f90',
 )
 
-# Build Fortran library
-rf_lib = library('rf_gpu_core',
+# Build Fortran library and install it
+rf_lib = shared_library('rf_gpu_core',
     fortran_sources,
     fortran_args: fortran_args,
-    install: false,
+    install: true,
+    install_dir: py.get_install_dir() / 'randomforest_gpu',
 )
 
 # Generate ctypes wrapper info
@@ -71,10 +72,4 @@ py.install_sources(
         'src/randomforest_gpu/backend.py',
     ],
     subdir: 'randomforest_gpu'
-)
-
-# Install compiled library
-install_data(
-    rf_lib.full_path(),
-    install_dir: py.get_install_dir() / 'randomforest_gpu',
 )
