@@ -38,10 +38,12 @@ contains
         ! Compute initial Gini criterion
         pno = 0.0d0
         pdo = 0.0d0
+        !$ACC PARALLEL LOOP REDUCTION(+:pno,pdo) IF_PRESENT
         do j = 1, nclass
             pno = pno + classpop(j) * classpop(j)
             pdo = pdo + classpop(j)
         end do
+        !$ACC END PARALLEL LOOP
 
         crit0 = pno / pdo
         jstat = 0
@@ -78,6 +80,8 @@ contains
 
             ! This is the critical loop for GPU acceleration
             ! Evaluate each potential split point
+            !$ACC DATA COPYIN(x, classes, y) COPY(wl, wr) IF_PRESENT
+            !$ACC PARALLEL LOOP PRIVATE(nc, k, crit) REDUCTION(max:critmax) IF_PRESENT
             do nsp = ndstart, ndend - 1
                 nc = nsp
                 k = classes(nc)
@@ -103,6 +107,8 @@ contains
                     end if
                 end if
             end do
+            !$ACC END PARALLEL LOOP
+            !$ACC END DATA
         end do
 
         if (critmax < -1.0d10 .or. msplit == 0) jstat = -1
@@ -126,12 +132,16 @@ contains
         nleft = 0
 
         ! Data partitioning (GPU-accelerated when compiled with OpenACC)
+        !$ACC DATA COPYIN(x, splitval) COPYOUT(indices_left, nleft) IF_PRESENT
+        !$ACC PARALLEL LOOP REDUCTION(+:nleft) IF_PRESENT
         do i = ndstart, ndend
             if (x(i, msplit) <= splitval) then
                 nleft = nleft + 1
                 indices_left(nleft) = i
             end if
         end do
+        !$ACC END PARALLEL LOOP
+        !$ACC END DATA
 
     end subroutine movedata_gpu
 
@@ -162,9 +172,11 @@ contains
 
         ! Compute class populations
         classpop(:) = 0.0d0
+        !$ACC PARALLEL LOOP IF_PRESENT
         do i = 1, n
             classpop(classes(i)) = classpop(classes(i)) + 1.0d0
         end do
+        !$ACC END PARALLEL LOOP
 
         ! Build root node with GPU acceleration
         call findbestsplit_gpu(x, y, classes, n, p, nclass, &

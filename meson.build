@@ -31,12 +31,13 @@ fortran_args = []
 
 # Try to detect GPU compiler capabilities
 if fc.get_id() == 'nvfortran' or fc.get_id() == 'pgi'
-    # NVIDIA HPC SDK compiler
-    message('Detected NVIDIA compiler - CPU mode (OpenACC disabled)')
-    # Note: OpenACC directives removed from code for gfortran compatibility
-    # To enable GPU: add back OpenACC directives and use: -acc -gpu=managed
+    # NVIDIA HPC SDK compiler - Enable OpenACC for GPU acceleration
+    message('Detected NVIDIA compiler - Enabling OpenACC GPU support')
+    fortran_args += ['-acc', '-gpu=managed', '-Minfo=accel']
+    # Define _OPENACC preprocessor macro
+    fortran_args += ['-D_OPENACC']
 elif fc.get_id() == 'gcc'
-    # GNU Fortran - CPU with OpenMP
+    # GNU Fortran - CPU with OpenMP (OpenACC directives ignored)
     message('Using GNU Fortran - CPU with OpenMP parallelization')
     fortran_args += ['-fopenmp']
     # Add static linking for portability (gfortran only)
