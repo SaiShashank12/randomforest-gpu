@@ -29,6 +29,10 @@ inc_np = include_directories(incdir_numpy, incdir_f2py)
 fc = meson.get_compiler('fortran')
 fortran_args = []
 
+# Debug: Print compiler ID
+message('Fortran compiler ID: ' + fc.get_id())
+message('Fortran compiler version: ' + fc.version())
+
 # Try to detect GPU compiler capabilities
 if fc.get_id() == 'nvfortran' or fc.get_id() == 'pgi'
     # NVIDIA HPC SDK compiler - Enable OpenACC for GPU acceleration
