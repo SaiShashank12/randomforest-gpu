@@ -60,6 +60,19 @@ jobs:
           ls -lh dist/*.whl
           echo "GPU wheel built with nvfortran + OpenACC"
 
+      - name: Check library dependencies
+        run: |
+          # Extract wheel to inspect contents
+          unzip -q dist/*.whl -d wheel_contents
+          echo "=== Wheel contents ==="
+          find wheel_contents -name "*.so" -type f
+          echo ""
+          echo "=== Library dependencies ==="
+          find wheel_contents -name "*.so" -type f -exec ldd {} \;
+          echo ""
+          echo "=== Missing libraries ==="
+          find wheel_contents -name "*.so" -type f -exec ldd {} \; | grep "not found"
+
       - name: Test GPU wheel loads correctly
         run: |
           pip install dist/*.whl

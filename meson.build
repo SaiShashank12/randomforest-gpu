@@ -28,6 +28,7 @@ inc_np = include_directories(incdir_numpy, incdir_f2py)
 # Fortran compiler options
 fc = meson.get_compiler('fortran')
 fortran_args = []
+fortran_link_args = []
 
 # Debug: Print compiler ID
 message('Fortran compiler ID: ' + fc.get_id())
@@ -41,7 +42,7 @@ if fc.get_id() == 'nvidia_hpc' or fc.get_id() == 'nvfortran' or fc.get_id() == '
     # Define _OPENACC preprocessor macro
     fortran_args += ['-D_OPENACC']
     # Static link NVIDIA runtime libraries for portable wheels
-    fortran_args += ['-Bstatic_pgi']
+    fortran_link_args += ['-Bstatic', '-static-nvidia']
 elif fc.get_id() == 'gcc'
     # GNU Fortran - CPU with OpenMP (OpenACC directives ignored)
     message('Using GNU Fortran - CPU with OpenMP parallelization')
@@ -64,6 +65,7 @@ fortran_sources = files(
 rf_lib = shared_library('rf_gpu_core',
     fortran_sources,
     fortran_args: fortran_args,
+    link_args: fortran_link_args,
     install: true,
     install_dir: py.get_install_dir() / 'randomforest_gpu',
 )
