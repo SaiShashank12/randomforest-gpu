@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Setup Fortran compiler - use setup-fortran for all platforms
+      # Setup Fortran compiler for Linux
       - name: Setup Fortran
         uses: fortran-lang/setup-fortran@v1
         with:
@@ -100,22 +100,20 @@ jobs:
 
           # Create new release
           gh release create "$TAG" \
-            --title "Random Forest GPU v${VERSION}" \
-            --notes "CPU wheels built with gfortran for Linux, macOS, and Windows.
+            --title "Random Forest GPU v${VERSION} (CPU)" \
+            --notes "**CPU-only wheels for Linux x86_64 + Python 3.12**
+
+          Built with gfortran for CPU-only execution.
 
           **Installation:**
-          Download the appropriate wheel for your platform and Python version, then:
-          \`\`\`bash
-          pip install randomforest_gpu-${VERSION}-cpXXX-cpXXX-PLATFORM.whl
-          \`\`\`
-
-          Or install directly from URL:
           \`\`\`bash
           pip install https://github.com/SaiShashank12/randomforest-gpu/releases/download/${TAG}/randomforest_gpu-${VERSION}-cp312-cp312-linux_x86_64.whl
           \`\`\`
 
           **GPU Support:**
-          These are CPU-only wheels. For GPU support, compile from source with nvfortran:
+          For GPU acceleration, see the GPU release: https://github.com/SaiShashank12/randomforest-gpu/releases/tag/${TAG}-gpu
+
+          Or compile from source:
           \`\`\`bash
           FC=nvfortran pip install git+https://github.com/SaiShashank12/randomforest-gpu.git
           \`\`\`" \
