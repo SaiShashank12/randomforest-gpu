@@ -22,7 +22,7 @@ class TestWheelLoading:
         from randomforest_gpu.backend import FortranBackend
 
         backend = FortranBackend()
-        assert backend._lib is not None, "Fortran library failed to load"
+        assert backend.lib is not None, "Fortran library failed to load"
 
     def test_library_functions_exist(self):
         """Test that required Fortran functions are available"""
@@ -31,9 +31,9 @@ class TestWheelLoading:
         backend = FortranBackend()
 
         # Check that critical functions exist
-        assert hasattr(backend._lib, 'train_rf_gpu'), "train_rf_gpu function not found"
-        assert hasattr(backend._lib, 'predict_rf_gpu'), "predict_rf_gpu function not found"
-        assert hasattr(backend._lib, 'check_gpu_available'), "check_gpu_available function not found"
+        assert hasattr(backend.lib, 'train_rf_gpu'), "train_rf_gpu function not found"
+        assert hasattr(backend.lib, 'predict_rf_gpu'), "predict_rf_gpu function not found"
+        assert hasattr(backend.lib, 'check_gpu_available'), "check_gpu_available function not found"
 
     def test_basic_training_works(self):
         """Test that basic model training works with loaded library"""
@@ -96,7 +96,8 @@ class TestWheelLoading:
         backend = FortranBackend()
 
         # Check that argtypes are set (means library loaded successfully)
-        assert backend._lib.train_rf_gpu.argtypes is not None, \
+        assert backend.lib is not None, "Library not loaded"
+        assert backend.lib.train_rf_gpu.argtypes is not None, \
             "train_rf_gpu argtypes not configured"
-        assert backend._lib.predict_rf_gpu.argtypes is not None, \
+        assert backend.lib.predict_rf_gpu.argtypes is not None, \
             "predict_rf_gpu argtypes not configured"
