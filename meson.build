@@ -40,6 +40,8 @@ if fc.get_id() == 'nvidia_hpc' or fc.get_id() == 'nvfortran' or fc.get_id() == '
     fortran_args += ['-acc', '-gpu=managed', '-Minfo=accel']
     # Define _OPENACC preprocessor macro
     fortran_args += ['-D_OPENACC']
+    # Static link NVIDIA runtime libraries for portable wheels
+    fortran_args += ['-Bstatic_pgi']
 elif fc.get_id() == 'gcc'
     # GNU Fortran - CPU with OpenMP (OpenACC directives ignored)
     message('Using GNU Fortran - CPU with OpenMP parallelization')
