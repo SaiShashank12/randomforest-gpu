@@ -55,6 +55,18 @@ jobs:
         run: |
           python -m build --wheel
 
+      - name: Repair wheel with auditwheel (bundle dependencies)
+        run: |
+          pip install auditwheel patchelf
+          # Add NVIDIA HPC SDK lib to LD_LIBRARY_PATH for auditwheel
+          export LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/23.11/compilers/lib:$LD_LIBRARY_PATH
+          # Repair wheel - bundles all .so dependencies
+          auditwheel repair dist/*.whl -w dist_repaired/
+          # Replace original wheel with repaired one
+          rm dist/*.whl
+          mv dist_repaired/*.whl dist/
+          rm -rf dist_repaired
+
       - name: List built wheels
         run: |
           ls -lh dist/*.whl
