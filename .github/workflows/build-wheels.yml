@@ -34,7 +34,7 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build wheel meson-python meson ninja numpy
+          pip install build wheel meson-python meson ninja numpy pytest
 
       - name: Verify Fortran compiler
         run: |
@@ -44,6 +44,13 @@ jobs:
       - name: Build wheel
         run: |
           python -m build --wheel
+
+      - name: Test CPU wheel loads correctly
+        run: |
+          pip install dist/*.whl
+          python -c "from randomforest_gpu import RandomForestClassifier; print('✓ CPU wheel imports successfully')"
+          pytest tests/test_wheel_loading.py -v
+          echo "✓ CPU wheel validated"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
